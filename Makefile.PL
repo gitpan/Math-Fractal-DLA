@@ -1,7 +1,10 @@
 use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
-%prereq = ( 'GD' => 1.27,
+%prereq = (
+  'GD' => 1.27,
+  'Log::LogLite' => 0.8,
+  'Test::More' => 0.54
           );
 
 WriteMakefile(

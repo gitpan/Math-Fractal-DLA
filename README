@@ -11,10 +11,19 @@ Math::Fractal::DLA is just the framework for subclasses like Math::Fractal::DLA:
 
 INSTALLATION
 
-To install this module type the following:
+To install this module with the Module::Build system type the following:
+
+   perl Build.PL
+   ./Build
+   ./Build test
+   ./Build install
+
+(or perl Build, perl Build test, perl Build install)
+To use the ExtUtils::MakeMaker and make type the following:
 
    perl Makefile.PL
    make
+   make test
    make install
 
 DEPENDENCIES
@@ -26,7 +35,8 @@ libpng (http://www.libpng.org/pub/png) - This is the official PNG reference libr
 zlib (http://www.info-zip.org/pub/infozip/zlib) - zlib is a free, general-purpose, legally unencumbered, lossless data-compression library.
 libjpeg (http://www.ijg.org) - This package contains C software to implement JPEG image compression and decompression.
 decompression.
-GD (http://search.cpan.org/author/LDS) - GD.pm is a Perl interface to Thomas Boutell's gd graphics library
+GD (http://search.cpan.org/~lds/GD-2.19/) - GD.pm is a Perl interface to Thomas Boutell's gd graphics library
+Log::LogLite (http://search.cpan.org/~rani/Log-LogLite-0.82/) - A simple logger 
 
 AUTHOR
 
@@ -38,4 +48,4 @@ This is my first CPAN package.  I hope that it is useful for you and you enjoy g
 
 COPYRIGHT
 
-Copyright (c) 2002 by Wolfgang Gruber. All rights reserved. This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+Copyright (c) 2002-2005 by Wolfgang Gruber. All rights reserved. This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

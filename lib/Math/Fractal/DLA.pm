@@ -7,14 +7,15 @@ use Exporter;
 use GD;
 use FileHandle;
 use vars qw($AUTOLOAD);
+use Log::LogLite;
 
 our @ISA = qw(Exporter);
 
 our @EXPORT = qw();
-our @EXPORT_OK = qw(debug addLogMessage loadFile setSize setPoints setBackground setFile setColors setBaseColor writeFile getFractal createImage getDirection ErrorExit);
-our %EXPORT_TAGS = ( all=>[qw(debug addLogMessage loadFile setSize setPoints setBackground setFile setColors setBaseColor writeFile getFractal createImage getDirection ErrorExit)] );
+our @EXPORT_OK = qw(debug addLogMessage loadFile setSize setPoints setBackground setFile setColors setBaseColor writeFile getFractal createImage getDirection exitOnError);
+our %EXPORT_TAGS = ( all=>[qw(debug addLogMessage loadFile setSize setPoints setBackground setFile setColors setBaseColor writeFile getFractal createImage getDirection exitOnError)] );
 
-our $VERSION = 0.20;
+our $VERSION = 0.21;
 
 # Constructor
 sub new
@@ -46,13 +47,13 @@ sub setType
 {
   my ($self,$type) = @_;
   no strict 'refs';
-  unless ($type) { $self->ErrorExit("No parameter defined"); }
+  unless ($type) { $self->exitOnError("No parameter defined"); }
   eval
   {
     require "Math/Fractal/DLA/".$type.".pm";
   };
   if ($@)
-  {	$self->ErrorExit("Can't locate package Math::Fractal::DLA::".$type); }
+  {	$self->exitOnError("Can't locate package Math::Fractal::DLA::".$type); }
   $self->{TYPE} = $type;
 } # setType
 
@@ -64,19 +65,13 @@ sub debug
   my %param = @_;
   if ($param{debug}) 
   { 
-	$self->{DEBUG} = 1;
-	$self->{LOG} = new FileHandle;
-	$self->{LOG}->open(">>".$param{logfile}) || $self->ErrorExit("Can't open logfile ".$param{log});
-	$self->{LOG}->autoflush(1);
-	$self->addLogMessage("STARTING NEW DLA-FRACTAL..");
+    $self->{DEBUG} = 1;
+    $self->{LOG} = new Log::LogLite($param{logfile});
+    $self->{LOG}->template("<date>: <message>");
+    $self->addLogMessage("STARTING NEW DLA-FRACTAL..");
   }
   else
   { 
-    if ($self->{LOG})
-    {
-      $self->addLogMessage("CLOSING LOG-FILE\n");
-      $self->{LOG}->close();
-    }
     $self->{DEBUG} = 0;
   }
 } # debug
@@ -88,8 +83,7 @@ sub addLogMessage
   my ($self,$msg) = @_;
   if ($self->{DEBUG})
   {
-    my $log = $self->{LOG};
-    print $log $msg."\n";
+    $self->{LOG}->write($msg."\n",3);
   }
 } # addLogMessage
 
@@ -103,13 +97,13 @@ sub loadFile
   {
     if (($filename =~ /\.jpg$/) || ($filename =~ /\.jpeg$/))
     { 
-	  $self->{IMAGE} = GD::Image->newFromJpeg($filename) || $self->ErrorExit("Can't open image ".$filename);
+	  $self->{IMAGE} = GD::Image->newFromJpeg($filename) || $self->exitOnError("Can't open image ".$filename);
 	  $self->addLogMessage("Loading JPG from $filename");
 	  $self->{OUTPUT} = "JPG";
 	} 
     elsif ($filename =~ /\.png$/)
     {
-	  $self->{IMAGE} = GD::Image->newFromPng($filename) || $self->ErrorExit("Can't open image ".$filename);
+	  $self->{IMAGE} = GD::Image->newFromPng($filename) || $self->exitOnError("Can't open image ".$filename);
 	  $self->addLogMessage("Loading PNG from $filename");
 	  $self->{OUTPUT} = "PNG";
 	}
@@ -117,7 +111,7 @@ sub loadFile
     $self->setSize(width => $width, height => $height);
   }	
   else
-  {	$self->ErrorExit($filename." doesn't exist"); }
+  {	$self->exitOnError($filename." doesn't exist"); }
 } # loadFile
 
 # Set the image size
@@ -126,9 +120,9 @@ sub setSize
 {
   my $self = shift;
   my %param = @_;
-  if ($self->{IMAGE}) { $self->ErrorExit("Can't resize existing image"); }
-  if ($param{width} !~ /^\d+$/) { $self->ErrorExit("Parameter width is not a valid number"); }
-  if ($param{height} !~ /^\d+$/) { $self->ErrorExit("Parameter height is not a valid number"); }
+  if ($self->{IMAGE}) { $self->exitOnError("Can't resize existing image"); }
+  if ($param{width} !~ /^\d+$/) { $self->exitOnError("Parameter width is not a valid number"); }
+  if ($param{height} !~ /^\d+$/) { $self->exitOnError("Parameter height is not a valid number"); }
   $self->{IMG_WIDTH} = $param{width};
   $self->{IMG_HEIGHT} = $param{height};
   $self->addLogMessage("Width: ".$param{width}.", Height: ".$param{height});
@@ -150,11 +144,11 @@ sub setPoints
   my $number = shift;
   if ($number)
   {
-    unless ($number =~ /^\d+$/) { $self->ErrorExit($number." is not a valid number"); }
+    unless ($number =~ /^\d+$/) { $self->exitOnError($number." is not a valid number"); }
     $self->{POINTS} = $number;
     $self->addLogMessage("Set max. ".$self->{POINTS}." points");
   }
-  else { $self->ErrorExit("No parameter defined"); }
+  else { $self->exitOnError("No parameter defined"); }
 } # setPoints
 
 # Get the number of points
@@ -171,7 +165,7 @@ sub setBackground
   my %para = @_;
   foreach my $color (keys %para)
   {
-	unless (($para{$color} >= 0) && ($para{$color} <= 255)) { $self->ErrorExit("Parameter $color is not a valid color"); }
+	unless (($para{$color} >= 0) && ($para{$color} <= 255)) { $self->exitOnError("Parameter $color is not a valid color"); }
   }
   %{ $self->{BACKGROUND} } = %para;
   return 1;	
@@ -209,12 +203,15 @@ sub setBaseColor
   my %para = @_;
   foreach my $key (keys %para)
   {
+    $key =~ /^[a-zA-Z]+_([rgb])$/;
+    my $colkey = $1;
+
 	if (($key =~ /^base/) && ($para{$key} >= 0) && ($para{$key} <= 255))
-	{ $self->{BASECOLOR}->{$key} = $para{$key}; }
+	{ $self->{BASECOLOR}->{$colkey} = $para{$key}; }
 	elsif (($key =~ /^add/) && ($para{$key} >= -255) && ($para{$key} <= 255))
-	{ $self->{VECTOR}->{$key} = $para{$key}; }
+	{ $self->{VECTOR}->{$colkey} = $para{$key}; }
 	else
-	{ $self->ErrorExit($key." is not a valid parameter"); }
+	{ $self->exitOnError($key." is not a valid parameter"); }
   }
   return 1;	
 } # setBaseColor
@@ -237,8 +234,8 @@ sub writeFile
 
   # Write to file
   my $pic = new FileHandle;
-  $pic->open(">".$self->{FILE}) || $self->ErrorExit("Can't open image ".$self->{FILE});
-  binmode $pic || $self->ErrorExit("Can't change image ".$self->{FILE}." to binary mode");
+  $pic->open(">".$self->{FILE}) || $self->exitOnError("Can't open image ".$self->{FILE});
+  binmode $pic || $self->exitOnError("Can't change image ".$self->{FILE}." to binary mode");
   if    ($self->{OUTPUT} eq "PNG") { print $pic $self->{IMAGE}->png; }
   elsif ($self->{OUTPUT} eq "JPG") { print $pic $self->{IMAGE}->jpeg(90); }
   $pic->close();
@@ -301,14 +298,14 @@ sub getDirection
 
 # Exit program if an error occured
 # Parameter: message
-sub ErrorExit
+sub exitOnError
 {
   my $self = shift;
   my $msg = shift;
   $self->addLogMessage($msg);
   $self->debug(debug => 0);
   croak($msg);
-} # ErrorExit
+} # exitOnError
 
 # AUTOLOAD the missing methods
 sub AUTOLOAD
@@ -327,7 +324,6 @@ sub DESTROY
   if ($self->{DEBUG})
   {
 	$self->addLogMessage("CLOSING LOG-FILE\n");
-	$self->{LOG}->close;
   }
 } # DESTROY
  

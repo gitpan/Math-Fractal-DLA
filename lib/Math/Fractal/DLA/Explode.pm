@@ -11,7 +11,7 @@ our @ISA = qw(Math::Fractal::DLA Exporter);
 our @EXPORT_OK = qw();
 our @EXPORT = qw();
 
-our $VERSION = 0.20;
+our $VERSION = 0.21;
 
 sub new
 {
@@ -123,11 +123,11 @@ sub setStartPosition
   my %coordinate = @_;
   foreach my $coord (keys %coordinate)
   {
-    if ($coordinate{$coord} !~ /^\d+$/) { $self->ErrorExit("Parameter $coord not valid"); }
+    if ($coordinate{$coord} !~ /^\d+$/) { $self->exitOnError("Parameter $coord not valid"); }
   }
 
-  if ($coordinate{x} > $self->{IMG_WIDTH}) { $self->ErrorExit("Parameter x is outside of image"); }
-  if ($coordinate{y} > $self->{IMG_HEIGHT}) { $self->ErrorExit("Parameter y is outside of image"); }
+  if ($coordinate{x} > $self->{IMG_WIDTH}) { $self->exitOnError("Parameter x is outside of image"); }
+  if ($coordinate{y} > $self->{IMG_HEIGHT}) { $self->exitOnError("Parameter y is outside of image"); }
   @{$self->{START}} = ($coordinate{x},$coordinate{y});
   return 1; 
 } # setStartPosition

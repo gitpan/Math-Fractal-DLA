@@ -6,7 +6,7 @@ use Math::Fractal::DLA;
 my $width = 500;
 my $height = 500;
 my $type = "Explode";
-my $debug = 0;
+my $debug = 1;
 
 my $fractal = new Math::Fractal::DLA;
 if ($debug) { $fractal->debug(debug => 1, logfile => "dla.log"); }

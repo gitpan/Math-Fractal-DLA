@@ -10,7 +10,7 @@ our @ISA = qw(Math::Fractal::DLA Exporter);
 our @EXPORT_OK = qw(generate);
 our @EXPORT = qw();
 
-our $VERSION = 0.20;
+our $VERSION = 0.21;
 
 sub new
 {

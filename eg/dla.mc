@@ -36,7 +36,7 @@ $fractal->setColors($colors);
 $fractal->setBaseColor(base_r => $bsred, base_g => $bsgreen, base_b => $bsblue,add_r => $ared, add_g => $agreen, add_b => $ablue);
 
 $fractal->generate(); 
-$m->out($fractal->getFractal());
+$m->print($fractal->getFractal());
 </%init>
 <%args>
 $pixels => 500
@@ -54,3 +54,7 @@ $ared => 0
 $agreen => 0
 $ablue => 0
 </%args>
+
+<%flags>
+  inherit => undef
+</%flags>

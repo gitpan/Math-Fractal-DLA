@@ -113,3 +113,6 @@ $agreen => 0
 $ablue => 0
 </%args>
 
+<%flags>
+  inherit => undef
+</%flags>
