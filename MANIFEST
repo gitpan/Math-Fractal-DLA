@@ -1,0 +1,12 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+eg/dla.pl
+eg/index.mc
+eg/dla.mc
+lib/Math/Fractal/DLA.pm
+lib/Math/Fractal/DLA/Explode.pm
+lib/Math/Fractal/DLA/Surrounding.pm
+lib/Math/Fractal/DLA/Race2Center.pm
+lib/Math/Fractal/DLA/GrowUp.pm
